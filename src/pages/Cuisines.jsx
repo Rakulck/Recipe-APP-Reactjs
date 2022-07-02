@@ -9,7 +9,7 @@ function Cuisines() {
     let params=useParams()
 
     const getCuisine=async(name)=>{
-        const data= await fetch(`https://api.spoonacular.com/recipes/complexSearch?apiKey=${process.env.REACT_APP_APIKEY}&cuisine=${name}%number=12`)
+        const data= await fetch(`https://api.spoonacular.com/recipes/complexSearch?apiKey=${process.env.REACT_APP_APIKEY}&cuisine=${name}`)
         const recipes= await data.json()
         setCuisine(recipes.results)
     }
@@ -19,12 +19,18 @@ function Cuisines() {
     },[params.type])
 
   return (
-    <Grid>
+    <Grid
+    animate={{opacity:1}}
+    initial={{opacity:0}}
+    exit={{opacity:0}}
+    transition={{duration:0.5}}>   
          {cusine.map((item)=>{
             return(
                 <Card key={item.id}>
+                  <Link to={'/recipe/'+item.id}>
                     <img src={item.image} alt=''/>
-                    <h4>{item.title}</h4>                
+                    <h4>{item.title}</h4>     
+                  </Link>           
                 </Card>
             )
          })}
@@ -33,7 +39,7 @@ function Cuisines() {
 }
 
 
-const Grid=styled.div`
+const Grid=styled(motion.div)`
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(19rem,1fr));
 grid-gap:2rem;
