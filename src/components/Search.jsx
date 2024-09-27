@@ -1,55 +1,141 @@
-import {useState}from 'react'
-import styled from "styled-components"
-import {FaSearch} from'react-icons/fa'
-import {useNavigate} from 'react-router-dom'
+import React, { useState, useEffect } from 'react';
+import styled from "styled-components";
+import { FaSearch } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import searchSuggestions from './SearchSuggestions';
 
 function Search() {
-
-    const [input,setInput]=useState("");
+    const [input, setInput] = useState("");
+    const [suggestions, setSuggestions] = useState([]);
     const navigate = useNavigate();
 
+    // Function for getting suggestions
+    const getSuggestions = (value) => {
+        return searchSuggestions.filter(item =>
+            item.toLowerCase().includes(value.toLowerCase())
+        );
+    };
 
-    const submitHandler=(e)=>{
-     e.preventDefault();
-     navigate('/searched/'+input)
-    }
+    useEffect(() => {
+        if (input.length > 0) {
+            setSuggestions(getSuggestions(input));
+        } else {
+            setSuggestions([]);
+        }
+    }, [input]);
 
-  return (
-  <FormStyle onSubmit={submitHandler}>
-  <div>
-    <FaSearch></FaSearch>
-      <input
-       onChange={(e)=>setInput(e.target.value)}
-        type="text" 
-        value={input}/>
-  </div>
-</FormStyle>
-  )
+    const submitHandler = (e) => {
+        e.preventDefault();
+        navigate('/searched/' + input);
+    };
+
+    const handleSuggestionClick = (suggestion) => {
+        setInput(suggestion);
+        setSuggestions([]);
+    };
+
+    return (
+        <FormStyle onSubmit={submitHandler}>
+            <div>
+                <FaSearch></FaSearch>
+                <input
+                    onChange={(e) => setInput(e.target.value)}
+                    type="text"
+                    value={input}
+                    placeholder="Search cuisines or ingredients..."
+                />
+            </div>
+            {suggestions.length > 0 && (
+                <SuggestionList>
+                    {suggestions.map((suggestion, index) => (
+                        <SuggestionItem
+                            key={index}
+                            onClick={() => handleSuggestionClick(suggestion)}
+                        >
+                            {suggestion}
+                        </SuggestionItem>
+                    ))}
+                </SuggestionList>
+            )}
+        </FormStyle>
+    );
 }
 
-const FormStyle=styled.form`
-    margin:0rem 20rem;
-    div{
-        width:100% ;
-        position:relative;
+const FormStyle = styled.form`
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 0 1rem;
+    position: relative;
+
+    @media (min-width: 768px) {
+        max-width: 80%;
     }
-    input{
+
+    @media (min-width: 1024px) {
+        max-width: 60%;
+    }
+
+    div {
+        width: 100%;
+        position: relative;
+    }
+
+    input {
         border: none;
-        background:linear-gradient(35deg,#494949,#313131);
-        font-size:1.5rem;
+        background: linear-gradient(35deg, #494949, #313131);
         color: white;
         border-radius: 1rem;
-        padding: 1rem 3rem;
+        padding: 0.8rem 3rem;
         outline: none;
         width: 100%;
-    }
-    svg{
-        position:absolute;
-        top:50%;
-        left:0%;
-        transform:translate(100%,-50%);
-        color:white;
-    }
-`
+        font-size: 0.9rem;
 
-export default Search
+        @media (min-width: 768px) {
+            padding: 1rem 3rem;
+            font-size: 1rem;
+        }
+
+        &::placeholder {
+            color: #a9a9a9;
+        }
+    }
+
+    svg {
+        position: absolute;
+        top: 50%;
+        left: 1rem;
+        transform: translateY(-50%);
+        color: white;
+        font-size: 1.2rem;
+    }
+`;
+
+const SuggestionList = styled.ul`
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 0 0 1rem 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1;
+`;
+
+const SuggestionItem = styled.li`
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+
+    @media (min-width: 768px) {
+        font-size: 1rem;
+    }
+
+    &:hover {
+        background-color: #f0f0f0;
+    }
+`;
+
+export default Search;

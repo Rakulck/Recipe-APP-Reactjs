@@ -1,3 +1,4 @@
+import Categories from "../components/Categories";
 import Popular from "../components/Popular";
 import Veggie from "../components/Veggie";
 import {motion} from 'framer-motion'
@@ -10,6 +11,7 @@ function Home() {
    exit={{opacity:0}}
    transition={{duration:0.5}}
    > 
+    <Categories/>
      <Veggie />
      <Popular />
   </motion.div>
