@@ -67,6 +67,7 @@ const Grid = styled.div`
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
     grid-gap: 2rem;
+    padding-top: 100px;
 `
 
 const Card = styled.div`
