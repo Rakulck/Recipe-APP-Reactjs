@@ -32,7 +32,7 @@ function Recipe() {
     }, [params.name]);
 
     const handleImageError = (e) => {
-        e.target.onerror = null; // Prevents looping
+        e.target.onerror = null;
         e.target.style.display = 'none';
         e.target.nextSibling.style.display = 'flex';
     }
@@ -72,16 +72,16 @@ function Recipe() {
                 </ButtonWrapper>
                 {activeTab === 'instructions' && (
                     <div>
-                        <h3 dangerouslySetInnerHTML={{__html: details.summary}}></h3>
-                        <h3 dangerouslySetInnerHTML={{__html: details.instructions}}></h3>
+                        <Summary dangerouslySetInnerHTML={{__html: details.summary}}></Summary>
+                        <Instructions dangerouslySetInnerHTML={{__html: details.instructions}}></Instructions>
                     </div>
                 )}
                 {activeTab === 'ingredients' && (
-                    <ul>
+                    <IngredientList>
                         {details.extendedIngredients && details.extendedIngredients.map((ingredient) => (
                             <li key={ingredient.id}>{ingredient.original}</li>
                         ))}
-                    </ul> 
+                    </IngredientList> 
                 )}
             </Info>
         </DetailWrapper>
@@ -91,7 +91,10 @@ function Recipe() {
 const DetailWrapper = styled.div`
     margin: 2rem auto;
     max-width: 1200px;
-    padding: 0 1rem;
+    padding: 2rem;
+    background-color: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
     
@@ -104,29 +107,6 @@ const DetailWrapper = styled.div`
         background: linear-gradient(35deg, #494949, #313131);
         color: white;
     }
-
-    h2 {
-        margin-bottom: 2rem;
-        font-size: 1.5rem;
-
-        @media (min-width: 768px) {
-            font-size: 2rem;
-        }
-    }
-
-    li {
-        font-size: 1rem;
-        line-height: 1.5rem;
-
-        @media (min-width: 768px) {
-            font-size: 1.2rem;
-            line-height: 2rem;
-        }
-    }
-
-    ul {
-        margin-top: 2rem;
-    }
 `
 
 const LeftColumn = styled.div`
@@ -136,6 +116,16 @@ const LeftColumn = styled.div`
     @media (min-width: 768px) {
         margin-bottom: 0;
         margin-right: 2rem;
+    }
+
+    h2 {
+        margin-bottom: 1rem;
+        font-size: 1.8rem;
+        color: #333;
+
+        @media (min-width: 768px) {
+            font-size: 2.2rem;
+        }
     }
 `
 
@@ -149,6 +139,7 @@ const ImageContainer = styled.div`
         height: auto;
         object-fit: cover;
         border-radius: 1rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 `
 
@@ -156,11 +147,18 @@ const Button = styled.button`
     padding: 0.75rem 1.5rem;
     color: #313131;
     background: white;
-    border: 2px solid black;
+    border: 2px solid #313131;
+    border-radius: 0.5rem;
     margin-right: 1rem;
     font-weight: 600;
     margin-bottom: 1rem;
     font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:hover {
+        background: #f0f0f0;
+    }
 
     @media (min-width: 768px) {
         padding: 1rem 2rem;
@@ -171,20 +169,60 @@ const Button = styled.button`
 const ButtonWrapper = styled.div`
     display: flex;
     flex-wrap: wrap;
-    margin-bottom: 1rem;
+    margin-bottom: 2rem;
 `
 
 const Info = styled.div`
     flex: 2;
+`
 
-    h3 {
+const Summary = styled.div`
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    color: #555;
+
+    @media (min-width: 768px) {
+        font-size: 1.1rem;
+    }
+`
+
+const Instructions = styled.div`
+    font-size: 1rem;
+    line-height: 1.8;
+    color: #333;
+
+    @media (min-width: 768px) {
+        font-size: 1.1rem;
+    }
+
+    ol, ul {
+        margin-left: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    li {
+        margin-bottom: 0.5rem;
+    }
+`
+
+const IngredientList = styled.ul`
+    list-style-type: none;
+    padding: 0;
+
+    li {
         font-size: 1rem;
-        line-height: 1.5rem;
-        margin-bottom: 1rem;
+        line-height: 1.6;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #eee;
+        color: #333;
 
         @media (min-width: 768px) {
-            font-size: 1.2rem;
-            line-height: 1.8rem;
+            font-size: 1.1rem;
+        }
+
+        &:last-child {
+            border-bottom: none;
         }
     }
 `
@@ -207,15 +245,18 @@ const ImagePlaceholder = styled.div`
 const LoadingMessage = styled.div`
     text-align: center;
     font-size: 1.5rem;
-    margin-top: 2rem;
+    margin-top: 4rem;
     color: #333;
 `
 
 const ErrorMessage = styled.div`
     text-align: center;
     font-size: 1.5rem;
-    margin-top: 2rem;
+    margin-top: 4rem;
     color: #ff0000;
+    background-color: #ffe6e6;
+    padding: 1rem;
+    border-radius: 0.5rem;
 `
 
 export default Recipe
