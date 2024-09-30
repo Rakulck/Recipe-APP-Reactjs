@@ -1,112 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled from "styled-components";
 import { FaSearch } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import searchSuggestions from './SearchSuggestions';
-
-function Search() {
-    const [input, setInput] = useState("");
-    const [suggestions, setSuggestions] = useState([]);
-    const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
-    const [hasSearched, setHasSearched] = useState(false);
-    const navigate = useNavigate();
-    const inputRef = useRef(null);
-
-    const getSuggestions = (value) => {
-        return searchSuggestions.filter(item =>
-            item.toLowerCase().includes(value.toLowerCase())
-        );
-    };
-
-    useEffect(() => {
-        if (input.length > 0 && !hasSearched) {
-            setSuggestions(getSuggestions(input));
-        } else {
-            setSuggestions([]);
-        }
-        setSelectedSuggestionIndex(-1);
-    }, [input, hasSearched]);
-
-    const submitHandler = (e) => {
-        e.preventDefault();
-        if (input) {
-            performSearch(input);
-        }
-    };
-
-    const performSearch = (searchTerm) => {
-        navigate('/searched/' + searchTerm);
-        setInput(searchTerm);
-        setSuggestions([]);
-        setSelectedSuggestionIndex(-1);
-        setHasSearched(true);
-        if (inputRef.current) {
-            inputRef.current.blur();
-        }
-    };
-
-    const handleSuggestionClick = (suggestion) => {
-        performSearch(suggestion);
-    };
-
-    const handleKeyDown = (e) => {
-        if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            setSelectedSuggestionIndex(prev => 
-                prev < suggestions.length - 1 ? prev + 1 : prev
-            );
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            setSelectedSuggestionIndex(prev => (prev > 0 ? prev - 1 : -1));
-        } else if (e.key === 'Enter') {
-            e.preventDefault();
-            if (selectedSuggestionIndex >= 0) {
-                performSearch(suggestions[selectedSuggestionIndex]);
-            } else {
-                submitHandler(e);
-            }
-        }
-    };
-
-    const handleInputChange = (e) => {
-        setInput(e.target.value);
-        setHasSearched(false);
-    };
-
-    const handleInputFocus = () => {
-        setHasSearched(false);
-    };
-
-    return (
-        <FormStyle onSubmit={submitHandler}>
-            <div>
-                <FaSearch></FaSearch>
-                <input
-                    ref={inputRef}
-                    onChange={handleInputChange}
-                    onKeyDown={handleKeyDown}
-                    onFocus={handleInputFocus}
-                    type="text"
-                    value={input}
-                    placeholder="Search cuisines or ingredients..."
-                />
-            </div>
-            {suggestions.length > 0 && !hasSearched && (
-                <SuggestionList>
-                    {suggestions.map((suggestion, index) => (
-                        <SuggestionItem
-                            key={index}
-                            onClick={() => handleSuggestionClick(suggestion)}
-                            className={index === selectedSuggestionIndex ? 'selected' : ''}
-                        >
-                            {suggestion}
-                        </SuggestionItem>
-                    ))}
-                </SuggestionList>
-            )}
-        </FormStyle>
-    );
-}
 
 const FormStyle = styled.form`
     max-width: 100%;
@@ -184,5 +80,113 @@ const SuggestionItem = styled.li`
         background-color: #f0f0f0;
     }
 `;
+
+function Search() {
+    const [input, setInput] = useState("");
+    const [suggestions, setSuggestions] = useState([]);
+    const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
+    const [hasSearched, setHasSearched] = useState(false);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const inputRef = useRef(null);
+
+    useEffect(() => {
+        setInput("");
+        setHasSearched(false);
+        setSuggestions([]);
+    }, [location]);
+
+    const getSuggestions = (value) => {
+        return searchSuggestions.filter(item =>
+            item.toLowerCase().includes(value.toLowerCase())
+        );
+    };
+
+    useEffect(() => {
+        if (input.length > 0 && !hasSearched) {
+            setSuggestions(getSuggestions(input));
+        } else {
+            setSuggestions([]);
+        }
+        setSelectedSuggestionIndex(-1);
+    }, [input, hasSearched]);
+
+    const submitHandler = (e) => {
+        e.preventDefault();
+        if (input) {
+            performSearch(input);
+        }
+    };
+
+    const performSearch = (searchTerm) => {
+        navigate('/searched/' + searchTerm);
+        setHasSearched(true);
+        if (inputRef.current) {
+            inputRef.current.blur();
+        }
+    };
+
+    const handleSuggestionClick = (suggestion) => {
+        performSearch(suggestion);
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setSelectedSuggestionIndex(prev => 
+                prev < suggestions.length - 1 ? prev + 1 : prev
+            );
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setSelectedSuggestionIndex(prev => (prev > 0 ? prev - 1 : -1));
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (selectedSuggestionIndex >= 0) {
+                performSearch(suggestions[selectedSuggestionIndex]);
+            } else {
+                submitHandler(e);
+            }
+        }
+    };
+
+    const handleInputChange = (e) => {
+        setInput(e.target.value);
+        setHasSearched(false);
+    };
+
+    const handleInputFocus = () => {
+        setHasSearched(false);
+    };
+
+    return (
+        <FormStyle onSubmit={submitHandler}>
+            <div>
+                <FaSearch></FaSearch>
+                <input
+                    ref={inputRef}
+                    onChange={handleInputChange}
+                    onKeyDown={handleKeyDown}
+                    onFocus={handleInputFocus}
+                    type="text"
+                    value={input}
+                    placeholder="Search cuisines or ingredients..."
+                />
+            </div>
+            {suggestions.length > 0 && !hasSearched && (
+                <SuggestionList>
+                    {suggestions.map((suggestion, index) => (
+                        <SuggestionItem
+                            key={index}
+                            onClick={() => handleSuggestionClick(suggestion)}
+                            className={index === selectedSuggestionIndex ? 'selected' : ''}
+                        >
+                            {suggestion}
+                        </SuggestionItem>
+                    ))}
+                </SuggestionList>
+            )}
+        </FormStyle>
+    );
+}
 
 export default Search;

@@ -16,7 +16,7 @@ function Categories() {
     </SLink>
     <SLink to={'/cuisine/Thai'}>
     <GiNoodles/>
-    <h4>Thai</h4>
+    <h4>Thai</h4> 
     </SLink>
     <SLink to={'/cuisine/French'}>
     <GiButterToast/>

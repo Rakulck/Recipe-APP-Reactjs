@@ -41,33 +41,46 @@ function Searched() {
     if (searchedRecipes.length === 0) return <NoResultsMessage>No recipes found for "{params.search}". Try a different search term.</NoResultsMessage>;
 
     return (
-        <Grid>
-            {searchedRecipes.map((item) => {
-                return (
-                    <Card key={item.id}>
-                        <Link to={'/recipe/' + item.id}>
-                            <img 
-                                src={item.image} 
-                                alt={item.title} 
-                                onError={handleImageError}
-                            />
-                            <ImagePlaceholder style={{display: 'none'}}>
-                                <p>Image not available</p>
-                            </ImagePlaceholder>
-                            <h4>{item.title}</h4>
-                        </Link>
-                    </Card>
-                )
-            })}
-        </Grid>
+        <Wrapper>
+            <Title>Search Results for "{params.search}"</Title>
+            <Grid>
+                {searchedRecipes.map((item) => {
+                    return (
+                        <Card key={item.id}>
+                            <Link to={'/recipe/' + item.id}>
+                                <img 
+                                    src={item.image} 
+                                    alt={item.title} 
+                                    onError={handleImageError}
+                                />
+                                <ImagePlaceholder style={{display: 'none'}}>
+                                    <p>Image not available</p>
+                                </ImagePlaceholder>
+                                <h4>{item.title}</h4>
+                            </Link>
+                        </Card>
+                    )
+                })}
+            </Grid>
+        </Wrapper>
     )
 }
+
+const Wrapper = styled.div`
+    padding-top: 2rem;
+`
+
+const Title = styled.h2`
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #333;
+    font-size: 2rem;
+`
 
 const Grid = styled.div`
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
     grid-gap: 2rem;
-    padding-top: 100px;
 `
 
 const Card = styled.div`
