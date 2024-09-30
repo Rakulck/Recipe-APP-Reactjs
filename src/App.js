@@ -15,7 +15,6 @@ function App() {
           <Logo to={"/"}>Deliciousssss</Logo>
         </Nav>
         <Search />
-
         <Pages />
       </BrowserRouter>
     </div>
