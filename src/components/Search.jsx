@@ -169,7 +169,7 @@ function Search() {
                     onFocus={handleInputFocus}
                     type="text"
                     value={input}
-                    placeholder="Search cuisines or ingredients..."
+                    placeholder="Search cuisines or ingredients or meal type..."
                 />
             </div>
             {suggestions.length > 0 && !hasSearched && (
