@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import styled from "styled-components";
-import { FaSearch } from 'react-icons/fa';
+import styled from 'styled-components';
+import { FaSearch, FaHistory } from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
 import searchSuggestions from './SearchSuggestions';
+
+// Max number of recent searches to store
+const MAX_RECENT_SEARCHES = 5;
 
 const FormStyle = styled.form`
     max-width: 100%;
@@ -65,9 +68,13 @@ const SuggestionList = styled.ul`
     max-height: 200px;
     overflow-y: auto;
     z-index: 1;
+    margin-top: 0.5rem;
 `;
 
 const SuggestionItem = styled.li`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding: 0.5rem 1rem;
     cursor: pointer;
     font-size: 0.9rem;
@@ -79,22 +86,71 @@ const SuggestionItem = styled.li`
     &:hover, &.selected {
         background-color: #f0f0f0;
     }
+
+    .suggestion-text {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .remove-button {
+        color: #999;
+        font-size: 0.8rem;
+        padding: 0.2rem 0.5rem;
+        &:hover {
+            color: #666;
+        }
+    }
+`;
+
+const SectionTitle = styled.div`
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    color: #666;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #ddd;
 `;
 
 function Search() {
     const [input, setInput] = useState("");
     const [suggestions, setSuggestions] = useState([]);
+    const [recentSearches, setRecentSearches] = useState([]);
     const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
     const [hasSearched, setHasSearched] = useState(false);
+    const [showRecent, setShowRecent] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
     const inputRef = useRef(null);
 
     useEffect(() => {
+        const stored = localStorage.getItem('recentSearches');
+        if (stored) {
+            setRecentSearches(JSON.parse(stored));
+        }
+    }, []);
+
+    useEffect(() => {
         setInput("");
         setHasSearched(false);
         setSuggestions([]);
+        setShowRecent(false);
     }, [location]);
+
+    const addToRecentSearches = (searchTerm) => {
+        const updated = [
+            searchTerm,
+            ...recentSearches.filter(term => term !== searchTerm)
+        ].slice(0, MAX_RECENT_SEARCHES);
+        
+        setRecentSearches(updated);
+        localStorage.setItem('recentSearches', JSON.stringify(updated));
+    };
+
+    const removeFromRecentSearches = (searchTerm) => {
+        const updated = recentSearches.filter(term => term !== searchTerm);
+        setRecentSearches(updated);
+        localStorage.setItem('recentSearches', JSON.stringify(updated));
+    };
 
     const getSuggestions = (value) => {
         return searchSuggestions.filter(item =>
@@ -105,11 +161,22 @@ function Search() {
     useEffect(() => {
         if (input.length > 0 && !hasSearched) {
             setSuggestions(getSuggestions(input));
+            setShowRecent(false);
         } else {
             setSuggestions([]);
         }
         setSelectedSuggestionIndex(-1);
     }, [input, hasSearched]);
+
+    const performSearch = (searchTerm) => {
+        addToRecentSearches(searchTerm);
+        navigate('/searched/' + searchTerm);
+        setHasSearched(true);
+        setShowRecent(false);
+        if (inputRef.current) {
+            inputRef.current.blur();
+        }
+    };
 
     const submitHandler = (e) => {
         e.preventDefault();
@@ -118,23 +185,17 @@ function Search() {
         }
     };
 
-    const performSearch = (searchTerm) => {
-        navigate('/searched/' + searchTerm);
-        setHasSearched(true);
-        if (inputRef.current) {
-            inputRef.current.blur();
-        }
-    };
-
     const handleSuggestionClick = (suggestion) => {
         performSearch(suggestion);
     };
 
     const handleKeyDown = (e) => {
+        const totalItems = showRecent ? recentSearches.length : suggestions.length;
+        
         if (e.key === 'ArrowDown') {
             e.preventDefault();
             setSelectedSuggestionIndex(prev => 
-                prev < suggestions.length - 1 ? prev + 1 : prev
+                prev < totalItems - 1 ? prev + 1 : prev
             );
         } else if (e.key === 'ArrowUp') {
             e.preventDefault();
@@ -142,7 +203,10 @@ function Search() {
         } else if (e.key === 'Enter') {
             e.preventDefault();
             if (selectedSuggestionIndex >= 0) {
-                performSearch(suggestions[selectedSuggestionIndex]);
+                const selectedItem = showRecent 
+                    ? recentSearches[selectedSuggestionIndex]
+                    : suggestions[selectedSuggestionIndex];
+                performSearch(selectedItem);
             } else {
                 submitHandler(e);
             }
@@ -152,16 +216,18 @@ function Search() {
     const handleInputChange = (e) => {
         setInput(e.target.value);
         setHasSearched(false);
+        setShowRecent(false);
     };
 
     const handleInputFocus = () => {
         setHasSearched(false);
+        setShowRecent(input.length === 0 && recentSearches.length > 0);
     };
 
     return (
         <FormStyle onSubmit={submitHandler}>
             <div>
-                <FaSearch></FaSearch>
+                <FaSearch />
                 <input
                     ref={inputRef}
                     onChange={handleInputChange}
@@ -172,17 +238,52 @@ function Search() {
                     placeholder="Search cuisines or ingredients or meal type..."
                 />
             </div>
-            {suggestions.length > 0 && !hasSearched && (
+            
+            {(suggestions.length > 0 || (showRecent && recentSearches.length > 0)) && !hasSearched && (
                 <SuggestionList>
-                    {suggestions.map((suggestion, index) => (
-                        <SuggestionItem
-                            key={index}
-                            onClick={() => handleSuggestionClick(suggestion)}
-                            className={index === selectedSuggestionIndex ? 'selected' : ''}
-                        >
-                            {suggestion}
-                        </SuggestionItem>
-                    ))}
+                    {showRecent && (
+                        <>
+                            <SectionTitle>Recent Searches</SectionTitle>
+                            {recentSearches.map((term, index) => (
+                                <SuggestionItem
+                                    key={`recent-${index}`}
+                                    onClick={() => handleSuggestionClick(term)}
+                                    className={index === selectedSuggestionIndex ? 'selected' : ''}
+                                >
+                                    <div className="suggestion-text">
+                                        <FaHistory size={12} />
+                                        {term}
+                                    </div>
+                                    <button 
+                                        className="remove-button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            removeFromRecentSearches(term);
+                                        }}
+                                    >
+                                        Remove
+                                    </button>
+                                </SuggestionItem>
+                            ))}
+                        </>
+                    )}
+                    
+                    {suggestions.length > 0 && (
+                        <>
+                            {showRecent && <SectionTitle>Suggestions</SectionTitle>}
+                            {suggestions.map((suggestion, index) => (
+                                <SuggestionItem
+                                    key={`suggestion-${index}`}
+                                    onClick={() => handleSuggestionClick(suggestion)}
+                                    className={index === selectedSuggestionIndex ? 'selected' : ''}
+                                >
+                                    <div className="suggestion-text">
+                                        {suggestion}
+                                    </div>
+                                </SuggestionItem>
+                            ))}
+                        </>
+                    )}
                 </SuggestionList>
             )}
         </FormStyle>

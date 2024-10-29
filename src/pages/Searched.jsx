@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 
 function Searched() {
     const [searchedRecipes, setSearchedRecipes] = useState([]);
+    const [alternativeRecipes, setAlternativeRecipes] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     let params = useParams();
@@ -19,6 +20,16 @@ function Searched() {
             }
             const recipes = await data.json();
             setSearchedRecipes(recipes.results);
+            
+            // If no results found, fetch random recipes as alternatives
+            if (recipes.results.length === 0) {
+                const randomData = await fetch(`https://api.spoonacular.com/recipes/random?apiKey=${process.env.REACT_APP_APIKEY}&number=6`);
+                if (!randomData.ok) {
+                    throw new Error('Failed to fetch alternative recipes');
+                }
+                const randomRecipes = await randomData.json();
+                setAlternativeRecipes(randomRecipes.recipes);
+            }
         } catch (err) {
             setError(err.message);
         } finally {
@@ -38,30 +49,57 @@ function Searched() {
 
     if (isLoading) return <LoadingMessage>Loading...</LoadingMessage>;
     if (error) return <ErrorMessage>Error: {error}</ErrorMessage>;
-    if (searchedRecipes.length === 0) return <NoResultsMessage>No recipes found for "{params.search}". Try a different search term.</NoResultsMessage>;
 
     return (
         <Wrapper>
-            <Title>Search Results for "{params.search}"</Title>
-            <Grid>
-                {searchedRecipes.map((item) => {
-                    return (
-                        <Card key={item.id}>
-                            <Link to={'/recipe/' + item.id}>
-                                <img 
-                                    src={item.image} 
-                                    alt={item.title} 
-                                    onError={handleImageError}
-                                />
-                                <ImagePlaceholder style={{display: 'none'}}>
-                                    <p>Image not available</p>
-                                </ImagePlaceholder>
-                                <h4>{item.title}</h4>
-                            </Link>
-                        </Card>
-                    )
-                })}
-            </Grid>
+            {searchedRecipes.length === 0 ? (
+                <>
+                    <Title>No results found for "{params.search}"</Title>
+                    <SubTitle>Try these recipes instead:</SubTitle>
+                    <Grid>
+                        {alternativeRecipes.map((recipe) => {
+                            return (
+                                <Card key={recipe.id}>
+                                    <Link to={'/recipe/' + recipe.id}>
+                                        <img 
+                                            src={recipe.image} 
+                                            alt={recipe.title} 
+                                            onError={handleImageError}
+                                        />
+                                        <ImagePlaceholder style={{display: 'none'}}>
+                                            <p>Image not available</p>
+                                        </ImagePlaceholder>
+                                        <h4>{recipe.title}</h4>
+                                    </Link>
+                                </Card>
+                            )
+                        })}
+                    </Grid>
+                </>
+            ) : (
+                <>
+                    <Title>Search Results for "{params.search}"</Title>
+                    <Grid>
+                        {searchedRecipes.map((item) => {
+                            return (
+                                <Card key={item.id}>
+                                    <Link to={'/recipe/' + item.id}>
+                                        <img 
+                                            src={item.image} 
+                                            alt={item.title} 
+                                            onError={handleImageError}
+                                        />
+                                        <ImagePlaceholder style={{display: 'none'}}>
+                                            <p>Image not available</p>
+                                        </ImagePlaceholder>
+                                        <h4>{item.title}</h4>
+                                    </Link>
+                                </Card>
+                            )
+                        })}
+                    </Grid>
+                </>
+            )}
         </Wrapper>
     )
 }
@@ -75,6 +113,13 @@ const Title = styled.h2`
     margin-bottom: 2rem;
     color: #333;
     font-size: 2rem;
+`
+
+const SubTitle = styled.h3`
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #666;
+    font-size: 1.5rem;
 `
 
 const Grid = styled.div`
@@ -125,13 +170,6 @@ const ErrorMessage = styled.div`
     font-size: 1.5rem;
     margin-top: 2rem;
     color: #ff0000;
-`
-
-const NoResultsMessage = styled.div`
-    text-align: center;
-    font-size: 1.5rem;
-    margin-top: 2rem;
-    color: #333;
 `
 
 export default Searched
